@@ -353,6 +353,9 @@ d3.select("#padding")
     .on("input", function() {
         padding = Math.min(Math.max(this.min, this.value), this.max);
         this.value = padding;
+        while (getConvRightPosition() > func_fn.length + 2 * padding) {
+            step -= 1;
+        }
         update();
     });
 
