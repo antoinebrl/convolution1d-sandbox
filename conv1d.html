@@ -6,13 +6,13 @@
 </head>
 <body>
   <p>dilation:
-    <input type="number" id="dilatation" value=1>
+    <input type="number" id="dilatation" value=1 min="1" max="3">
   </p>
   <p>stride:
-    <input type="number" id="stride" value=1>
+    <input type="number" id="stride" value=1 min="1" max="3">
   </p>
   <p>padding:
-    <input type="number" id="padding" value=0>
+    <input type="number" id="padding" value=0 min="0" max="4">
   </p>
   <input type="button" id="new" value="New">
   <input type="button" id="delete" value="delete">
@@ -78,6 +78,20 @@ const pad_left = svg.append("g").attr("id", "pad_left");
 const pad_right = svg.append("g").attr("id", "pad_right");
 const out = svg.append("g").attr("id", "out");
 
+function computeConv() {
+    out_fn = [];
+    for (let s = 0; s <= step; s++) {
+        let c = 0;
+        for (let i = 0; i < kernel_fn.length; i++) {
+            c += kernel_fn[i].y * func_padded_fn[s * stride + i * dilatation].y
+        }
+        out_fn.push({
+            x: 0,
+            y: -c / kernel_fn.length / magnitude_max
+        });
+    }
+}
+
 dragY = d3.drag()
     .on("start", function(d) {
         d3.select(this).attr("stroke", "black");
@@ -94,6 +108,7 @@ dragY = d3.drag()
         d3.select(this).attr("stroke", null);
     })
 
+//// Draw X axis line
 function updateXaxis(root, n, dilatation) {
     if (root.select("#hline").empty()) {
         root.append("line")
@@ -108,6 +123,7 @@ function updateXaxis(root, n, dilatation) {
         .attr("x2", n * pts_spacing * dilatation);
 }
 
+//// Update group top right corner positions
 function updateCenteredLayout(root, n, line_y, dilatation) {
     const x = (width - n * pts_spacing * dilatation) / 2;
     root.attr("transform", "translate(" + x + "," + line_y + ")");
@@ -138,7 +154,7 @@ function updateOutputLayout() {
     out.attr("transform", "translate(" + x + "," + out_line_y + ")");
 }
 
-
+//// Drawing primitives
 function drawPadding(root, n) {
     // data binding
     const cercles = root.selectAll("circle").data(d3.range(n));
@@ -156,9 +172,8 @@ function drawPadding(root, n) {
             return pts_spacing * (i + 0.5);
         })
         .attr("cy", 0)
-        .attr("r", radius)
+        .attr("r", radius);
 }
-
 
 function drawFunction(root, data, dilatation) {
     // data binding
@@ -207,9 +222,8 @@ function drawFunction(root, data, dilatation) {
         .attr("cy", function(d, i) {
             return d.y;
         })
-        .attr("r", radius)
+        .attr("r", radius);
 }
-
 
 function drawConvOps(root, data, dilatation) {
     // data binding
@@ -273,20 +287,6 @@ function drawConvOps(root, data, dilatation) {
         });
 }
 
-function computeConv() {
-    out_fn = [];
-    for (let s = 0; s <= step; s++) {
-        let c = 0;
-        for (let i = 0; i < kernel_fn.length; i++) {
-            c += kernel_fn[i].y * func_padded_fn[s * stride + i * dilatation].y
-        }
-        out_fn.push({
-            x: 0,
-            y: -c / kernel_fn.length / magnitude_max
-        });
-    }
-}
-
 function update() {
     func_padded_fn = padFunc(func_fn, padding);
 
@@ -317,7 +317,7 @@ function update() {
     // result
     computeConv();
     updateOutputLayout();
-    updateXaxis(out, out_fn.length, stride)
+    updateXaxis(out, out_fn.length, stride);
     drawFunction(out, out_fn, stride);
 
 }
@@ -328,9 +328,11 @@ function getConvRightPosition() {
     return step * stride + (kernel_fn.length - 1) * dilatation + 1;
 }
 
+//// User input
 d3.select("#dilatation")
     .on("input", function() {
-        dilatation = this.value;
+        dilatation = Math.min(Math.max(this.min, this.value), this.max);
+        this.value = dilatation;
         while (getConvRightPosition() > func_padded_fn.length) {
             step -= 1;
         }
@@ -339,18 +341,20 @@ d3.select("#dilatation")
 
 d3.select("#stride")
     .on("input", function() {
-        stride = this.value;
+        stride = Math.min(Math.max(this.min, this.value), this.max);
+        this.value = stride;
         while (getConvRightPosition() > func_padded_fn.length) {
             step -= 1;
         }
         update();
-    })
+    });
 
 d3.select("#padding")
     .on("input", function() {
-        padding = this.value;
+        padding = Math.min(Math.max(this.min, this.value), this.max);
+        this.value = padding;
         update();
-    })
+    });
 
 
 d3.select("#prevstep")
@@ -359,38 +363,32 @@ d3.select("#prevstep")
             step -= 1;
             update();
         }
-    })
+    });
 d3.select("#nextstep")
     .on("click", function() {
         if (getConvRightPosition() + stride <= func_padded_fn.length) {
             step += 1;
             update();
         }
-    })
+    });
 
 d3.select("#new")
     .on("click", function() {
         if (kernel_fn.length < kernel_max_support) {
-            kernel_fn.push({
-                x: kernel_fn.length,
-                y: 0
-            })
+            kernel_fn.push({ y: 0 });
             while (getConvRightPosition() > func_padded_fn.length) {
                 step -= 1;
             }
             update();
         }
-    })
+    });
 d3.select("#delete")
     .on("click", function() {
         if (kernel_fn.length > 1) {
-            kernel_fn.pop({
-                x: kernel_fn.length,
-                y: 0
-            })
+            kernel_fn.pop({ y: 0 });
             update();
         }
-    })
+    });
 
   </script>
 </body>
