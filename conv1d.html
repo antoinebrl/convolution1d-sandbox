@@ -15,80 +15,65 @@
   <input type="button" id="nextstep" value="Next">
 
   <script>
-  const width = 500;
-  const height = 575;
+const width = 500;
+const height = 575;
 
-  const svg = d3.select("body")
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height);
+const svg = d3.select("body")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-  const border = svg.append("rect")
-      .attr("fill", "lightblue")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("height", height)
-      .attr("width", width);
+const border = svg.append("rect")
+    .attr("fill", "lightblue")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("height", height)
+    .attr("width", width);
 
-  const colors = ['#ffffee', '#ffeebb', '#c2e699', '#78c679', '#31a354', '#006837'];
-  const kernel_line_y = 75;
-  const func_line_y = 200;
-  const conv_line_y = 325;
-  const out_line_y = 475;
-  const magnitude_max = 50;
-  const pts_spacing = 25;
-  const kernel_max_support = 7;
-  const radius = 8;
-  let dilatation = 1;
-  let stride = 1;
-  let pad = 0;
-  let step = 0;
+const colors = ['#ffffee', '#ffeebb', '#c2e699', '#78c679', '#31a354', '#006837'];
 
-  const kernel_fn = d3.range(5).map(i => ({
-      y: magnitude_max*(Math.random() - 0.5) * 2,
-  }));
-  const func_fn = d3.range(19).map(i => ({
-      y: magnitude_max*(Math.random() - 0.5) * 2,
-  }));
-  let out_fn = [];
+const kernel_line_y = 75;
+const func_line_y = 200;
+const conv_line_y = 325;
+const out_line_y = 475;
 
-  const kernel = svg.append("g").attr("id", "kernel");
-  const conv = svg.append("g").attr("id", "conv");
-  const ops = conv.append("g").attr("id", "ops");
-  const func = svg.append("g").attr("id", "func");
-  const out = svg.append("g").attr("id", "out");
+const magnitude_max = 50;
+const pts_spacing = 25;
+const kernel_max_support = 7;
+const radius = 8;
 
-  dragY = function() {
+let dilatation = 1;
+let stride = 1;
+let pad = 0;
+let step = 0;
 
-      function dragstarted(d) {
-          d3.select(this).attr("stroke", "black");
-      }
+const kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+const func_fn = d3.range(19).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+let out_fn = [];
 
-      function dragged(d) {
-          y = d3.event.y;
-          y = Math.max(-magnitude_max, y);
-          y = Math.min(+magnitude_max, y);
-          d.y = y;
+const kernel = svg.append("g").attr("id", "kernel");
+const conv = svg.append("g").attr("id", "conv");
+const ops = conv.append("g").attr("id", "ops");
+const func = svg.append("g").attr("id", "func");
+const out = svg.append("g").attr("id", "out");
 
-          updateKernel();
-          updateFunc();
-          drawConv();
-          computeConv();
-          updateOut();
+dragY = d3.drag()
+    .on("start", function(d) {
+        d3.select(this).attr("stroke", "black");
+    })
+    .on("drag", function(d) {
+        y = d3.event.y;
+        y = Math.max(-magnitude_max, y);
+        y = Math.min(+magnitude_max, y);
+        d.y = y;
 
-      }
+        update();
+    })
+    .on("end", function(d) {
+        d3.select(this).attr("stroke", null);
+    })
 
-      function dragended(d) {
-          d3.select(this).attr("stroke", null);
-      }
-
-      return d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended);
-  }
-
-  function updateXaxis(root, data, dilatation) {
+function updateXaxis(root, data, dilatation) {
     if (root.select("#hline").empty()) {
         root.append("line")
             .attr("id", "hline")
@@ -98,36 +83,30 @@
             .attr("stroke-width", 2);
     }
     root.select("#hline")
-      .attr("x1", 0)
-      .attr("x2", data.length * pts_spacing * dilatation);
-  }
+        .attr("x1", 0)
+        .attr("x2", data.length * pts_spacing * dilatation);
+}
 
-  function updateCenteredLayout(root, data, line_y, dilatation) {
-    root.attr("transform", "translate(" +
-         (width - data.length * pts_spacing * dilatation) / 2 +
-         "," +
-         line_y + ")"
-       );
-  }
+function updateCenteredLayout(root, data, line_y, dilatation) {
+    const x = (width - data.length * pts_spacing * dilatation) / 2;
+    root.attr("transform", "translate(" + x + "," + line_y + ")");
+}
 
+function updateConvLayout() {
+    let x = (width - func_fn.length * pts_spacing) / 2
+    x += pts_spacing * step * stride
+    x -= pts_spacing * (dilatation - 1) / 2;
+    conv.attr("transform", "translate(" + x + "," + conv_line_y + ")");
+}
 
-  function updateConvLayout() {
-    conv.attr("transform", "translate(" +
-         ((width - func_fn.length * pts_spacing) / 2 + pts_spacing * step * stride - pts_spacing * (dilatation - 1) / 2 ) +
-         "," +
-         conv_line_y + ")"
-       );
-  }
+function updateOutputLayout() {
+    let x = (width - func_fn.length * pts_spacing) / 2
+    x += pts_spacing * ((kernel_fn.length - 1) * dilatation + 1) / 2
+    x -= pts_spacing * stride / 2;
+    out.attr("transform", "translate(" + x + "," + out_line_y + ")");
+}
 
-  function updateOutputLayout() {
-    out.attr("transform", "translate(" +
-        ((width - func_fn.length * pts_spacing) / 2 + pts_spacing * ((kernel_fn.length - 1) * dilatation + 1) / 2 - pts_spacing * stride / 2) +
-        "," +
-        out_line_y + ")"
-      );
-  }
-
-  function draw(root, data, dilatation) {
+function drawFunction(root, data, dilatation) {
     // data binding
     const vlines = root.selectAll("#vline").data(data);
     // remove elements no longer in data
@@ -142,10 +121,16 @@
     // Operates on both new and old elements
     vlines
         .merge(new_lines)
-        .attr("x1", function(d, i) { return pts_spacing * (i + 0.5) * dilatation; })
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
         .attr("y1", 0)
-        .attr("x2", function(d, i) { return pts_spacing * (i + 0.5) * dilatation; })
-        .attr("y2", function(d, i) { return d.y; });
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("y2", function(d, i) {
+            return d.y;
+        });
 
     // data binding
     const cercles = root.selectAll("circle").data(data);
@@ -155,212 +140,186 @@
     const new_circles = cercles
         .enter()
         .append("circle")
-        .attr("fill", function(d, i) { return colors[i]; })
-        .call(dragY());
+        .attr("fill", function(d, i) {
+            return colors[i];
+        })
+        .call(dragY);
     // Operates on both new and old elements
     cercles
         .merge(new_circles)
-        .attr("cx", function(d, i) { return pts_spacing * (i + 0.5) * dilatation; })
-        .attr("cy", function(d, i) { return d.y; })
+        .attr("cx", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("cy", function(d, i) {
+            return d.y;
+        })
         .attr("r", radius)
-  }
+}
 
 
-  function drawConvOps(root, data, dilatation) {
-      // data binding
-      const mult_lines = root.selectAll("#multline").data(data);
-      // remove elements no longer in data
-      mult_lines.exit().remove();
-      // Create new entry for new elements in data
-      const new_mutl_lines = mult_lines
-          .enter()
-          .append("line")
-          .attr("id", "multline")
-          .attr("stroke", "steelblue")
-          .attr("stroke-width", 1);
-      // Operates on both new and old elements
-      mult_lines
-          .merge(new_mutl_lines)
-          .attr("x1", function(d, i) { return pts_spacing * (i + 0.5) * dilatation; })
-          .attr("y1", function(d, i) { return d.y; })
-          .attr("x2", function(d, i) { return pts_spacing * (i + 0.5) * dilatation; })
-          .attr("y2", -125 );
+function drawConvOps(root, data, dilatation) {
+    // data binding
+    const mult_lines = root.selectAll("#multline").data(data);
+    // remove elements no longer in data
+    mult_lines.exit().remove();
+    // Create new entry for new elements in data
+    const new_mutl_lines = mult_lines
+        .enter()
+        .append("line")
+        .attr("id", "multline")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1);
+    // Operates on both new and old elements
+    mult_lines
+        .merge(new_mutl_lines)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("y1", function(d, i) {
+            return d.y;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("y2", -125);
 
-      // data binding
-      const add_lines = root.selectAll("#addline").data(data);
-      // remove elements no longer in data
-      add_lines.exit().remove();
-      // Create new entry for new elements in data
-      const new_lines = add_lines
-          .enter()
-          .append("path")
-          .attr("id", "addline")
-          .attr("stroke", "darkorange")
-          .attr("stroke-width", 1)
-          .attr("fill", "none");
-      // Operates on both new and old elements
-      add_lines
-          .merge(new_lines)
-          .attr("d", function(d, i) {
+    // data binding
+    const add_lines = root.selectAll("#addline").data(data);
+    // remove elements no longer in data
+    add_lines.exit().remove();
+    // Create new entry for new elements in data
+    const new_lines = add_lines
+        .enter()
+        .append("path")
+        .attr("id", "addline")
+        .attr("stroke", "darkorange")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+    // Operates on both new and old elements
+    add_lines
+        .merge(new_lines)
+        .attr("d", function(d, i) {
             const x_pts = pts_spacing * (i + 0.5) * dilatation;
             const x_middle = pts_spacing * data.length / 2 * dilatation;
             const points = [
-              [x_pts, Math.max(d.y, - radius / 2) + 10],
-              [x_pts, magnitude_max + 15],
-              [x_pts, magnitude_max + 20],
-              [x_middle, magnitude_max + 20],
-              [x_middle, magnitude_max + 25],
-              [x_middle, magnitude_max + 150 - magnitude_max],
+                [x_pts, Math.max(d.y, -radius / 2) + 10],
+                [x_pts, magnitude_max + 15],
+                [x_pts, magnitude_max + 20],
+                [x_middle, magnitude_max + 20],
+                [x_middle, magnitude_max + 25],
+                [x_middle, magnitude_max + 150 - magnitude_max],
             ];
 
             const line = d3
-                     .line()
-                     .x(d => d[0])
-                     .y(d => d[1])
-                     .curve(d3.curveBundle.beta(1));
+                .line()
+                .x(d => d[0])
+                .y(d => d[1])
+                .curve(d3.curveBundle.beta(1));
             return line(points);
-           });
-    }
+        });
+}
 
-  function updateKernel() {
-    updateCenteredLayout(kernel, kernel_fn, kernel_line_y, dilatation);
-    updateXaxis(kernel, kernel_fn, dilatation)
-    draw(kernel, kernel_fn, dilatation);
-  }
-
-  function updateFunc() {
-    updateCenteredLayout(func, func_fn, func_line_y, 1);
-    updateXaxis(func, func_fn, 1)
-    draw(func, func_fn, 1);
-  }
-
-  function updateConv() {
-    updateXaxis(conv, kernel_fn, dilatation);
-    drawConv();
-  }
-
-  function updateOut() {
-    // updateCenteredLayout(out, out_fn, out_line_y, 1);
-    updateXaxis(out, out_fn, stride)
-    draw(out, out_fn, stride);
-  }
-
-  function drawKernel() {
-    draw(kernel, kernel_fn, dilatation);
-  }
-
-  function drawFunc() {
-    draw(func, func_fn, 1);
-  }
-
-  function drawConv() {
-    draw(conv, kernel_fn, dilatation);
-    drawConvOps(ops, kernel_fn, dilatation);
-  }
-
-  function computeConv() {
+function computeConv() {
     out_fn = [];
     for (let s = 0; s <= step; s++) {
-      let c = 0;
-      for (let i = 0; i < kernel_fn.length; i++) {
-        c += kernel_fn[i].y * func_fn[s * stride + i * dilatation].y
-      }
-      out_fn.push({x: 0, y: - c / kernel_fn.length / magnitude_max});
+        let c = 0;
+        for (let i = 0; i < kernel_fn.length; i++) {
+            c += kernel_fn[i].y * func_fn[s * stride + i * dilatation].y
+        }
+        out_fn.push({
+            x: 0,
+            y: -c / kernel_fn.length / magnitude_max
+        });
     }
-  }
+}
 
-  computeConv();
-  updateKernel();
-  updateFunc();
-  updateCenteredLayout(conv, func_fn, conv_line_y, dilatation);
-  updateConvLayout();
-  updateConv();
-  updateOutputLayout();
-  updateOut();
+function update() {
+    // kernel
+    updateCenteredLayout(kernel, kernel_fn, kernel_line_y, dilatation);
+    updateXaxis(kernel, kernel_fn, dilatation);
+    drawFunction(kernel, kernel_fn, dilatation);
+
+    // function
+    updateCenteredLayout(func, func_fn, func_line_y, 1);
+    updateXaxis(func, func_fn, 1);
+    drawFunction(func, func_fn, 1);
+
+    // conv-ops
+    updateConvLayout();
+    updateXaxis(conv, kernel_fn, dilatation);
+    drawFunction(conv, kernel_fn, dilatation);
+    drawConvOps(ops, kernel_fn, dilatation);
+
+    // result
+    computeConv();
+    updateOutputLayout();
+    updateXaxis(out, out_fn, stride)
+    drawFunction(out, out_fn, stride);
+
+}
+update();
 
 
-  d3.select("#stride")
-    .on("input",   function() {
+function getConvRightPosition() {
+    return step * stride + (kernel_fn.length - 1) * dilatation + 1;
+}
+
+d3.select("#stride")
+    .on("input", function() {
         stride = this.value;
-        updateKernel();
-        if (step * stride + kernel_fn.length > func_fn.length ) {
-          step -= 1;
-          updateConvLayout();
+        while (getConvRightPosition() > func_fn.length) {
+            step -= 1;
         }
-        updateConvLayout();
-        updateConv();
-        updateConvLayout();
-        computeConv();
-        updateOutputLayout();
-        updateOut();
+        update();
     })
 
-  d3.select("#dilatation")
-    .on("input",   function() {
+d3.select("#dilatation")
+    .on("input", function() {
         dilatation = this.value;
-        while (step + (kernel_fn.length - 1) * dilatation + 1 > func_fn.length ) {
-          step -= 1;
+        while (getConvRightPosition() > func_fn.length) {
+            step -= 1;
         }
-        updateKernel();
-        updateConvLayout();
-        updateConv();
-        updateConvLayout();
-        computeConv();
-        updateOutputLayout();
-        updateOut();
+        update();
     })
 
 
-  d3.select("#prevstep")
-    .on("click", function(){
-      if (step > -pad  ) {
-        step -= 1;
-        updateConvLayout();
-        computeConv();
-        updateOut();
-      }
-      console.log("step:" + step)
-      console.log("stride:" + stride)
-      console.log("dilatation:" + dilatation)
-    })
-  d3.select("#nextstep")
-    .on("click", function(){
-      if ((step + 1)* stride + (kernel_fn.length - 1) * dilatation + 1  <= func_fn.length ) {
-        step += 1;
-        updateConvLayout();
-        computeConv();
-        updateOut();
-      }
-      console.log("step:" + step)
-      console.log("stride:" + stride)
-      console.log("dilatation:" + dilatation)
-    })
-
-  d3.select("#new")
-    .on("click", function(){
-      if (kernel_fn.length < kernel_max_support) {
-        kernel_fn.push({x: kernel_fn.length, y:0})
-        updateKernel();
-        while (step * stride + kernel_fn.length > func_fn.length ) {
-          step -= 1;
+d3.select("#prevstep")
+    .on("click", function() {
+        if (step > -pad) {
+            step -= 1;
+            update();
         }
-        updateConvLayout();
-        updateConv();
-        updateOutputLayout();
-        computeConv();
-        updateOut();
-      }
     })
-  d3.select("#delete")
-    .on("click", function(){
-      if (kernel_fn.length > 1) {
-        kernel_fn.pop({x: kernel_fn.length, y:0})
-        updateKernel();
-        updateConv();
-        updateOutputLayout();
-        computeConv();
-        updateOut();
-      }
+d3.select("#nextstep")
+    .on("click", function() {
+        if (getConvRightPosition() + stride <= func_fn.length) {
+            step += 1;
+            update();
+        }
+    })
+
+d3.select("#new")
+    .on("click", function() {
+        if (kernel_fn.length < kernel_max_support) {
+            kernel_fn.push({
+                x: kernel_fn.length,
+                y: 0
+            })
+            while (getConvRightPosition() > func_fn.length) {
+                step -= 1;
+            }
+            update();
+        }
+    })
+d3.select("#delete")
+    .on("click", function() {
+        if (kernel_fn.length > 1) {
+            kernel_fn.pop({
+                x: kernel_fn.length,
+                y: 0
+            })
+            update();
+        }
     })
 
   </script>
