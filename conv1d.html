@@ -17,8 +17,11 @@
   <input type="button" id="new" value="New">
   <input type="button" id="delete" value="delete">
   <br>
+  <input type="button" id="reset" value="Reset">
   <input type="button" id="prevstep" value="Previous">
+  <input type="button" id="play" value="Play">
   <input type="button" id="nextstep" value="Next">
+
 
   <script>
 const width = 500;
@@ -52,6 +55,7 @@ let dilatation = 1;
 let stride = 1;
 let padding = 0;
 let step = 0;
+let animate = false;
 
 const kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 const func_fn = d3.range(11).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
@@ -73,9 +77,9 @@ function padFunc(fn, pad) {
 const kernel = svg.append("g").attr("id", "kernel");
 const conv = svg.append("g").attr("id", "conv");
 const ops = conv.append("g").attr("id", "ops");
-const func = svg.append("g").attr("id", "func");
 const pad_left = svg.append("g").attr("id", "pad_left");
 const pad_right = svg.append("g").attr("id", "pad_right");
+const func = svg.append("g").attr("id", "func");
 const out = svg.append("g").attr("id", "out");
 
 function computeConv() {
@@ -119,6 +123,8 @@ function updateXaxis(root, n, dilatation) {
             .attr("stroke-width", 2);
     }
     root.select("#hline")
+        .transition()
+        .duration(500 * animate)
         .attr("x1", 0)
         .attr("x2", n * pts_spacing * dilatation);
 }
@@ -126,32 +132,42 @@ function updateXaxis(root, n, dilatation) {
 //// Update group top right corner positions
 function updateCenteredLayout(root, n, line_y, dilatation) {
     const x = (width - n * pts_spacing * dilatation) / 2;
-    root.attr("transform", "translate(" + x + "," + line_y + ")");
+    root.transition()
+        .duration(500 * animate)
+        .attr("transform", "translate(" + x + "," + line_y + ")");
 }
 
 function updatePadLeft() {
     const right = (width - func_fn.length * pts_spacing) / 2;
     const left = right - padding * pts_spacing;
-    pad_left.attr("transform", "translate(" + left + "," + func_line_y + ")");
+    pad_left.transition()
+        .duration(250 * animate)
+        .attr("transform", "translate(" + left + "," + func_line_y + ")");
 }
 
 function updatePadRight() {
     const left = (width + func_fn.length * pts_spacing) / 2;
-    pad_right.attr("transform", "translate(" + left + "," + func_line_y + ")");
+    pad_right.transition()
+        .duration(500 * animate)
+        .attr("transform", "translate(" + left + "," + func_line_y + ")");
 }
 
 function updateConvLayout() {
     let x = (width - func_padded_fn.length * pts_spacing) / 2
     x += pts_spacing * step * stride
     x -= pts_spacing * (dilatation - 1) / 2;
-    conv.attr("transform", "translate(" + x + "," + conv_line_y + ")");
+    conv.transition()
+        .duration(500 * animate)
+        .attr("transform", "translate(" + x + "," + conv_line_y + ")");
 }
 
 function updateOutputLayout() {
     let x = (width - func_padded_fn.length * pts_spacing) / 2
     x += pts_spacing * ((kernel_fn.length - 1) * dilatation + 1) / 2
     x -= pts_spacing * stride / 2;
-    out.attr("transform", "translate(" + x + "," + out_line_y + ")");
+    out.transition()
+        .duration(500 * animate)
+        .attr("transform", "translate(" + x + "," + out_line_y + ")");
 }
 
 //// Drawing primitives
@@ -159,7 +175,7 @@ function drawPadding(root, n) {
     // data binding
     const cercles = root.selectAll("circle").data(d3.range(n));
     // remove elements no longer in data
-    cercles.exit().remove();
+    cercles.exit().transition().duration(250).attr("r", 0).remove();
     // Create new entry for new elements in data
     const new_circles = cercles
         .enter()
@@ -171,7 +187,12 @@ function drawPadding(root, n) {
         .attr("cx", function(i) {
             return pts_spacing * (i + 0.5);
         })
-        .attr("cy", 0)
+        .attr("cy", 0);
+
+    new_circles
+        .attr("r", 0)
+        .transition()
+        .duration(250)
         .attr("r", radius);
 }
 
@@ -179,7 +200,7 @@ function drawFunction(root, data, dilatation) {
     // data binding
     const vlines = root.selectAll("#vline").data(data);
     // remove elements no longer in data
-    vlines.exit().remove();
+    vlines.exit().transition().duration(250).attr("stroke-width", 0).remove();
     // Create new entry for new elements in data
     const new_lines = vlines
         .enter()
@@ -204,7 +225,7 @@ function drawFunction(root, data, dilatation) {
     // data binding
     const cercles = root.selectAll("circle").data(data);
     // remove elements no longer in data
-    cercles.exit().remove();
+    cercles.exit().transition().duration(250).attr("r", 0).remove();
     // Create new entry for new elements in data
     const new_circles = cercles
         .enter()
@@ -221,7 +242,12 @@ function drawFunction(root, data, dilatation) {
         })
         .attr("cy", function(d, i) {
             return d.y;
-        })
+        });
+
+    new_circles
+        .attr("r", 0)
+        .transition()
+        .duration(250)
         .attr("r", radius);
 }
 
@@ -229,49 +255,53 @@ function drawConvOps(root, data, dilatation) {
     // data binding
     const mult_lines = root.selectAll("#multline").data(data);
     // remove elements no longer in data
-    mult_lines.exit().remove();
+    mult_lines.exit().transition().duration(250).attr("stroke-width", 0).remove();
     // Create new entry for new elements in data
     const new_mutl_lines = mult_lines
         .enter()
         .append("line")
         .attr("id", "multline")
         .attr("stroke", "steelblue")
-        .attr("stroke-width", 1);
+        .attr("stroke-width", 0)
+        .attr("y1", 0)
+        .attr("y2", 0)
+        .transition()
+        .duration(250)
+        .attr("stroke-width", 1)
+        .attr("y2", -125);
     // Operates on both new and old elements
     mult_lines
         .merge(new_mutl_lines)
         .attr("x1", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
-        .attr("y1", function(d, i) {
-            return d.y;
-        })
         .attr("x2", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
-        .attr("y2", -125);
 
     // data binding
     const add_lines = root.selectAll("#addline").data(data);
     // remove elements no longer in data
-    add_lines.exit().remove();
+    add_lines.exit().transition().duration(250).attr("stroke-width", 0).remove();
     // Create new entry for new elements in data
-    const new_lines = add_lines
+    const new_add_lines = add_lines
         .enter()
         .append("path")
         .attr("id", "addline")
         .attr("stroke", "darkorange")
-        .attr("stroke-width", 1)
         .attr("fill", "none");
+
     // Operates on both new and old elements
     add_lines
-        .merge(new_lines)
+        .merge(new_add_lines)
+        .transition()
+        .duration(500)
         .attr("d", function(d, i) {
             const x_pts = pts_spacing * (i + 0.5) * dilatation;
             const x_middle = pts_spacing * data.length / 2 * dilatation;
             const points = [
                 [x_pts, Math.max(d.y, -radius / 2) + 10],
-                [x_pts, magnitude_max + 15],
+                [x_pts, magnitude_max + 10],
                 [x_pts, magnitude_max + 20],
                 [x_middle, magnitude_max + 20],
                 [x_middle, magnitude_max + 25],
@@ -285,7 +315,14 @@ function drawConvOps(root, data, dilatation) {
                 .curve(d3.curveBundle.beta(1));
             return line(points);
         });
+
+    new_add_lines
+        .attr("stroke-width", 0)
+        .transition()
+        .duration(250)
+        .attr("stroke-width", 1);
 }
+
 
 function update() {
     func_padded_fn = padFunc(func_fn, padding);
@@ -322,9 +359,10 @@ function update() {
 
 }
 update();
+animate = true;
 
 
-function getConvRightPosition() {
+function getConvRightPosition(step) {
     return step * stride + (kernel_fn.length - 1) * dilatation + 1;
 }
 
@@ -333,7 +371,7 @@ d3.select("#dilatation")
     .on("input", function() {
         dilatation = Math.min(Math.max(this.min, this.value), this.max);
         this.value = dilatation;
-        while (getConvRightPosition() > func_padded_fn.length) {
+        while (getConvRightPosition(step) > func_padded_fn.length) {
             step -= 1;
         }
         update();
@@ -343,7 +381,7 @@ d3.select("#stride")
     .on("input", function() {
         stride = Math.min(Math.max(this.min, this.value), this.max);
         this.value = stride;
-        while (getConvRightPosition() > func_padded_fn.length) {
+        while (getConvRightPosition(step) > func_padded_fn.length) {
             step -= 1;
         }
         update();
@@ -353,7 +391,7 @@ d3.select("#padding")
     .on("input", function() {
         padding = Math.min(Math.max(this.min, this.value), this.max);
         this.value = padding;
-        while (getConvRightPosition() > func_fn.length + 2 * padding) {
+        while (getConvRightPosition(step) > func_fn.length + 2 *padding) {
             step -= 1;
         }
         update();
@@ -369,7 +407,7 @@ d3.select("#prevstep")
     });
 d3.select("#nextstep")
     .on("click", function() {
-        if (getConvRightPosition() + stride <= func_padded_fn.length) {
+        if (getConvRightPosition(step) + stride <= func_padded_fn.length) {
             step += 1;
             update();
         }
@@ -379,7 +417,7 @@ d3.select("#new")
     .on("click", function() {
         if (kernel_fn.length < kernel_max_support) {
             kernel_fn.push({ y: 0 });
-            while (getConvRightPosition() > func_padded_fn.length) {
+            while (getConvRightPosition(step) > func_padded_fn.length) {
                 step -= 1;
             }
             update();
@@ -391,6 +429,23 @@ d3.select("#delete")
             kernel_fn.pop({ y: 0 });
             update();
         }
+    });
+d3.select("#play")
+    .on("click", function() {
+        d3.selectAll("*").interrupt();
+        svg.transition().on("end", function repeat(d){
+            if (getConvRightPosition(step) + stride <= func_padded_fn.length) {
+                step += 1;
+                update();
+                d3.active(this).transition().delay(1000).on("start", repeat);
+            }
+        })
+    });
+d3.select("#reset")
+    .on("click", function() {
+        d3.selectAll("*").interrupt();
+        step = 0;
+        update();
     });
 
   </script>
