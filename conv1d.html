@@ -39,13 +39,18 @@ const svg = d3.select("body")
     .attr("height", height);
 
 const border = svg.append("rect")
-    .attr("fill", "lightblue")
+    .attr("fill", "#f4f1de")
     .attr("x", 0)
     .attr("y", 0)
     .attr("height", height)
     .attr("width", width);
 
 
+const kernel_color = "#C72E38"
+const func_color = "#1d3557"
+const mult_color = "#d94a64"
+const add_color = "#679436"
+const out_color = "#8e576d"
 const duration = 350
 
 const kernel_line_y = 75;
@@ -204,7 +209,7 @@ function drawPadding(root, n) {
 ;
 }
 
-function drawFunction(root, data, dilatation) {
+function drawFunction(root, data, dilatation, color) {
     // data binding
     const vlines = root.selectAll("#vline").data(data);
     // remove elements no longer in data
@@ -241,9 +246,7 @@ function drawFunction(root, data, dilatation) {
     const new_circles = cercles
         .enter()
         .append("circle")
-        .attr("fill", function(d, i) {
-            return colors[i];
-         })
+        .attr("fill", color)
         .attr("cx", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
@@ -273,7 +276,7 @@ function drawConvOps(root, data, dilatation) {
         .enter()
         .append("line")
         .attr("id", "multline")
-        .attr("stroke", "steelblue")
+        .attr("stroke", mult_color)
         .attr("stroke-width", 0)
         .attr("y1", 0)
         .attr("y2", 0)
@@ -307,7 +310,7 @@ function drawConvOps(root, data, dilatation) {
         .enter()
         .append("path")
         .attr("id", "addline")
-        .attr("stroke", "darkorange")
+        .attr("stroke", add_color)
         .attr("fill", "none");
 
     // Operates on both new and old elements
@@ -349,7 +352,7 @@ function update() {
     // kernel
     updateCenteredLayout(kernel, kernel_fn.length, kernel_line_y, dilatation);
     updateXaxis(kernel, kernel_fn.length, dilatation);
-    drawFunction(kernel, kernel_fn, dilatation);
+    drawFunction(kernel, kernel_fn, dilatation, kernel_color);
 
     // function
     updatePadLeft();
@@ -358,7 +361,7 @@ function update() {
 
     updateCenteredLayout(func, func_fn.length, func_line_y, 1);
     updateXaxis(func, func_fn.length, 1);
-    drawFunction(func, func_fn, 1);
+    drawFunction(func, func_fn, 1, func_color);
 
     updatePadRight();
     updateXaxis(pad_right, padding, 1);
@@ -367,14 +370,14 @@ function update() {
     // conv-ops
     updateConvLayout();
     updateXaxis(conv, kernel_fn.length, dilatation);
-    drawFunction(conv, kernel_fn, dilatation);
+    drawFunction(conv, kernel_fn, dilatation, kernel_color);
     drawConvOps(ops, kernel_fn, dilatation);
 
     // result
     computeConv();
     updateOutputLayout();
     updateXaxis(out, out_fn.length, stride);
-    drawFunction(out, out_fn, stride);
+    drawFunction(out, out_fn, stride, out_color);
 
 }
 update();
