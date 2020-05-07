@@ -14,17 +14,18 @@
   <p>padding:
     <input type="number" id="padding" value=0 min="0" max="4">
   </p>
-  <input type="button" id="new" value="New">
-  <input type="button" id="delete" value="delete">
-  <br>
-  <input type="button" id="reset" value="Reset">
-  <input type="button" id="prevstep" value="Previous">
-  <input type="button" id="play" value="Play">
-  <input type="button" id="nextstep" value="Next">
-
-
+  <p>
+    <input type="button" id="new" value="New">
+    <input type="button" id="delete" value="delete">
+  </p>
+  <p>
+    <input type="button" id="reset" value="Reset">
+    <input type="button" id="prevstep" value="Previous">
+    <input type="button" id="play" value="Play">
+    <input type="button" id="nextstep" value="Next">
+  </p>
   <script>
-const width = 500;
+const width = 575;
 const height = 575;
 
 const svg = d3.select("body")
@@ -39,7 +40,8 @@ const border = svg.append("rect")
     .attr("height", height)
     .attr("width", width);
 
-const colors = ['#ffffee', '#ffeebb', '#c2e699', '#78c679', '#31a354', '#006837'];
+
+const duration = 350
 
 const kernel_line_y = 75;
 const func_line_y = 200;
@@ -58,7 +60,7 @@ let step = 0;
 let animate = false;
 
 const kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
-const func_fn = d3.range(11).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+const func_fn = d3.range(15).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 let func_padded_fn = [];
 let out_fn = [];
 
@@ -124,7 +126,7 @@ function updateXaxis(root, n, dilatation) {
     }
     root.select("#hline")
         .transition()
-        .duration(500 * animate)
+        .duration(animate * duration)
         .attr("x1", 0)
         .attr("x2", n * pts_spacing * dilatation);
 }
@@ -133,7 +135,7 @@ function updateXaxis(root, n, dilatation) {
 function updateCenteredLayout(root, n, line_y, dilatation) {
     const x = (width - n * pts_spacing * dilatation) / 2;
     root.transition()
-        .duration(500 * animate)
+        .duration(animate * duration)
         .attr("transform", "translate(" + x + "," + line_y + ")");
 }
 
@@ -141,14 +143,14 @@ function updatePadLeft() {
     const right = (width - func_fn.length * pts_spacing) / 2;
     const left = right - padding * pts_spacing;
     pad_left.transition()
-        .duration(250 * animate)
+        .duration(animate * duration)
         .attr("transform", "translate(" + left + "," + func_line_y + ")");
 }
 
 function updatePadRight() {
     const left = (width + func_fn.length * pts_spacing) / 2;
     pad_right.transition()
-        .duration(500 * animate)
+        .duration(animate * duration)
         .attr("transform", "translate(" + left + "," + func_line_y + ")");
 }
 
@@ -157,7 +159,7 @@ function updateConvLayout() {
     x += pts_spacing * step * stride
     x -= pts_spacing * (dilatation - 1) / 2;
     conv.transition()
-        .duration(500 * animate)
+        .duration(animate * duration)
         .attr("transform", "translate(" + x + "," + conv_line_y + ")");
 }
 
@@ -166,7 +168,7 @@ function updateOutputLayout() {
     x += pts_spacing * ((kernel_fn.length - 1) * dilatation + 1) / 2
     x -= pts_spacing * stride / 2;
     out.transition()
-        .duration(500 * animate)
+        .duration(animate * duration)
         .attr("transform", "translate(" + x + "," + out_line_y + ")");
 }
 
@@ -175,12 +177,16 @@ function drawPadding(root, n) {
     // data binding
     const cercles = root.selectAll("circle").data(d3.range(n));
     // remove elements no longer in data
-    cercles.exit().transition().duration(250).attr("r", 0).remove();
+    cercles.exit().transition().duration(animate * duration / 2).attr("r", 0).remove();
     // Create new entry for new elements in data
     const new_circles = cercles
         .enter()
         .append("circle")
         .attr("fill", "lightgray")
+        .attr("r", 0)
+        .transition()
+        .duration(animate * duration * 2)
+        .attr("r", radius)
     // Operates on both new and old elements
     cercles
         .merge(new_circles)
@@ -190,64 +196,65 @@ function drawPadding(root, n) {
         .attr("cy", 0);
 
     new_circles
-        .attr("r", 0)
-        .transition()
-        .duration(250)
-        .attr("r", radius);
+;
 }
 
 function drawFunction(root, data, dilatation) {
     // data binding
     const vlines = root.selectAll("#vline").data(data);
     // remove elements no longer in data
-    vlines.exit().transition().duration(250).attr("stroke-width", 0).remove();
+    vlines.exit().transition().duration(animate * duration / 2).attr("stroke-width", 0).remove();
     // Create new entry for new elements in data
     const new_lines = vlines
         .enter()
         .append("line")
         .attr("id", "vline")
         .attr("stroke", "gray")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
+        .attr("y1", 0);
     // Operates on both new and old elements
     vlines
         .merge(new_lines)
+        .attr("y2", function(d, i) {
+            return d.y;
+        })
+        .transition()
+        .duration(animate * duration)
         .attr("x1", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
-        .attr("y1", 0)
         .attr("x2", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
-        })
-        .attr("y2", function(d, i) {
-            return d.y;
         });
+
 
     // data binding
     const cercles = root.selectAll("circle").data(data);
     // remove elements no longer in data
-    cercles.exit().transition().duration(250).attr("r", 0).remove();
+    cercles.exit().transition().duration(animate * duration / 2).attr("r", 0).remove();
     // Create new entry for new elements in data
     const new_circles = cercles
         .enter()
         .append("circle")
         .attr("fill", function(d, i) {
             return colors[i];
+         })
+        .attr("cx", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
         })
+        .attr("r", 0)
         .call(dragY);
     // Operates on both new and old elements
     cercles
         .merge(new_circles)
+        .attr("cy", function(d, i) {
+            return d.y;
+        })
+        .transition()
+        .duration(animate * duration)
         .attr("cx", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
-        .attr("cy", function(d, i) {
-            return d.y;
-        });
-
-    new_circles
-        .attr("r", 0)
-        .transition()
-        .duration(250)
         .attr("r", radius);
 }
 
@@ -255,7 +262,7 @@ function drawConvOps(root, data, dilatation) {
     // data binding
     const mult_lines = root.selectAll("#multline").data(data);
     // remove elements no longer in data
-    mult_lines.exit().transition().duration(250).attr("stroke-width", 0).remove();
+    mult_lines.exit().transition().duration(animate * duration / 2).attr("stroke-width", 0).remove();
     // Create new entry for new elements in data
     const new_mutl_lines = mult_lines
         .enter()
@@ -265,13 +272,20 @@ function drawConvOps(root, data, dilatation) {
         .attr("stroke-width", 0)
         .attr("y1", 0)
         .attr("y2", 0)
-        .transition()
-        .duration(250)
-        .attr("stroke-width", 1)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .transition("fade in")
+        .duration(animate * duration / 2)
+        .attr("stroke-width", 1.25)
         .attr("y2", -125);
     // Operates on both new and old elements
     mult_lines
-        .merge(new_mutl_lines)
+        .transition()
+        .duration(animate * duration)
         .attr("x1", function(d, i) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
@@ -282,7 +296,7 @@ function drawConvOps(root, data, dilatation) {
     // data binding
     const add_lines = root.selectAll("#addline").data(data);
     // remove elements no longer in data
-    add_lines.exit().transition().duration(250).attr("stroke-width", 0).remove();
+    add_lines.exit().transition().duration(animate * duration / 2).attr("stroke-width", 0).remove();
     // Create new entry for new elements in data
     const new_add_lines = add_lines
         .enter()
@@ -295,7 +309,7 @@ function drawConvOps(root, data, dilatation) {
     add_lines
         .merge(new_add_lines)
         .transition()
-        .duration(500)
+        .duration(animate* duration)
         .attr("d", function(d, i) {
             const x_pts = pts_spacing * (i + 0.5) * dilatation;
             const x_middle = pts_spacing * data.length / 2 * dilatation;
@@ -319,8 +333,8 @@ function drawConvOps(root, data, dilatation) {
     new_add_lines
         .attr("stroke-width", 0)
         .transition()
-        .duration(250)
-        .attr("stroke-width", 1);
+        .duration(animate * duration)
+        .attr("stroke-width", 1.25);
 }
 
 
