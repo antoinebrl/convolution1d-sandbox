@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
   <p>dilation:
@@ -23,6 +25,9 @@
     <input type="button" id="prevstep" value="Previous">
     <input type="button" id="play" value="Play">
     <input type="button" id="nextstep" value="Next">
+  </p>
+  <p>
+    \[(f * g)(i) = \sum_{k}^{} f_{i+j} \times w_j\]
   </p>
   <script>
 const width = 575;
