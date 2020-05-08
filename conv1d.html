@@ -4,7 +4,22 @@
   <meta charset="utf-8">
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script type="text/x-mathjax-config">
+  MathJax = {
+    loader: {load: ['[tex]/color']},
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)'], ['\\[', '\\]']],
+      packages: {'[+]': ['color']}
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+
+  </script>
+  <script type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/input/tex/extensions/colorV2.js" charset="UTF-8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/input/tex/extensions/color.js" charset="UTF-8"></script>
 </head>
 <body>
   <p>dilation:
@@ -26,25 +41,12 @@
     <input type="button" id="play" value="Play">
     <input type="button" id="nextstep" value="Next">
   </p>
-  <p>
-    \[(f * g)(i) = \sum_{k}^{} f_{i+j} \times w_j\]
-  </p>
+
+  <div id="math"></div>
+
   <script>
 const width = 575;
 const height = 575;
-
-const svg = d3.select("body")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-const border = svg.append("rect")
-    .attr("fill", "#f4f1de")
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("height", height)
-    .attr("width", width);
-
 
 const kernel_color = "#C72E38"
 const func_color = "#1d3557"
@@ -52,6 +54,7 @@ const mult_color = "#d94a64"
 const add_color = "#679436"
 const out_color = "#8e576d"
 const duration = 350
+
 
 const kernel_line_y = 75;
 const func_line_y = 200;
@@ -69,22 +72,22 @@ let padding = 0;
 let step = 0;
 let animate = false;
 
+const svg = d3.select("body")
+.append("svg")
+.attr("width", width)
+.attr("height", height);
+
+const border = svg.append("rect")
+.attr("fill", "#f4f1de")
+.attr("x", 0)
+.attr("y", 0)
+.attr("height", height)
+.attr("width", width);
+
 const kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 const func_fn = d3.range(15).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 let func_padded_fn = [];
 let out_fn = [];
-
-function padFunc(fn, pad) {
-    let padded = [];
-    for (let i = 0; i < pad; i++) {
-      padded.push({y: 0});
-    }
-    padded = padded.concat(fn);
-    for (let i = 0; i < pad; i++) {
-      padded.push({y: 0});
-    }
-    return padded;
-}
 
 const kernel = svg.append("g").attr("id", "kernel");
 const conv = svg.append("g").attr("id", "conv");
@@ -93,6 +96,18 @@ const pad_left = svg.append("g").attr("id", "pad_left");
 const pad_right = svg.append("g").attr("id", "pad_right");
 const func = svg.append("g").attr("id", "func");
 const out = svg.append("g").attr("id", "out");
+
+function padFunc(fn, pad) {
+  let padded = [];
+  for (let i = 0; i < pad; i++) {
+    padded.push({y: 0});
+  }
+  padded = padded.concat(fn);
+  for (let i = 0; i < pad; i++) {
+    padded.push({y: 0});
+  }
+  return padded;
+}
 
 function computeConv() {
     out_fn = [];
@@ -105,6 +120,23 @@ function computeConv() {
             x: 0,
             y: -c / kernel_fn.length / magnitude_max
         });
+    }
+}
+
+function updateEquation() {
+    const equation = document.getElementById("math");
+
+    latex_equation = "\\textcolor{" + out_color + "}{(f * g)}("+ step + ") "
+    latex_equation += "= "
+    latex_equation += "\\textcolor{" + add_color + "}{\\sum_{k}^{K}}"
+    latex_equation += "\\textcolor{" + func_color + "}{f_{i+j}}"
+    latex_equation += "\\textcolor{" + mult_color + "}{\\mathbf{\\times}} "
+    latex_equation += "\\textcolor{" + kernel_color + "}{w_j}"
+
+    equation.innerHTML = "<p>" + "\\[" + latex_equation + "\\]" + "</p>";
+    try {
+      MathJax.typeset(["#math"]);
+    } catch (error) {
     }
 }
 
@@ -348,6 +380,7 @@ function drawConvOps(root, data, dilatation) {
 
 function update() {
     func_padded_fn = padFunc(func_fn, padding);
+    updateEquation();
 
     // kernel
     updateCenteredLayout(kernel, kernel_fn.length, kernel_line_y, dilatation);
@@ -378,7 +411,6 @@ function update() {
     updateOutputLayout();
     updateXaxis(out, out_fn.length, stride);
     drawFunction(out, out_fn, stride, out_color);
-
 }
 update();
 animate = true;
