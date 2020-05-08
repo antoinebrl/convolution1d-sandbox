@@ -253,7 +253,13 @@ function drawFunction(root, data, dilatation, color) {
         .attr("id", "vline")
         .attr("stroke", "gray")
         .attr("stroke-width", 2)
-        .attr("y1", 0);
+        .attr("y1", 0)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        });
     // Operates on both new and old elements
     vlines
         .merge(new_lines)
