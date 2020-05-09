@@ -309,7 +309,11 @@ function drawFunction(root, data, dilatation, color) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
         .attr("r", 0)
-        .call(dragY);
+        .call(dragY)
+        .on("dblclick", function(d) {
+            d.y = d.y ? 0 : - magnitude_max;
+            update()
+        });
     // Operates on both new and old elements
     cercles
         .merge(new_circles)
