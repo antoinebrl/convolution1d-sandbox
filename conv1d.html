@@ -97,6 +97,25 @@ const pad_right = svg.append("g").attr("id", "pad_right");
 const func = svg.append("g").attr("id", "func");
 const out = svg.append("g").attr("id", "out");
 
+
+function printLabel(label, line_y) {
+  svg.append("text")
+      .attr("stroke-width", "2")
+      .attr("fill", "#5e6472")
+      .attr("transform", "rotate(-90) translate(-" + line_y + ", 20)")
+      .attr("text-anchor", "middle")
+      .attr("font-family", "monospace")
+      .attr("dominant-baseline", "middle")
+      .text(label);
+}
+printLabel("kernel", kernel_line_y);
+printLabel("signal", func_line_y);
+printLabel("convolution", conv_line_y);
+printLabel("result", out_line_y);
+
+
+
+
 function padFunc(fn, pad) {
   let padded = [];
   for (let i = 0; i < pad; i++) {
