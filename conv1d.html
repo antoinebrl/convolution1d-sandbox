@@ -128,18 +128,19 @@ function padFunc(fn, pad) {
   return padded;
 }
 
-function computeConv() {
+function computeConv(f, g) {
     out_fn = [];
     for (let s = 0; s <= step; s++) {
         let c = 0;
-        for (let i = 0; i < kernel_fn.length; i++) {
-            c += kernel_fn[i].y * func_padded_fn[s * stride + i * dilatation].y
+        for (let i = 0; i < g.length; i++) {
+            c += g[i].y * f[s * stride + i * dilatation].y
         }
         out_fn.push({
             x: 0,
-            y: -c / kernel_fn.length / magnitude_max
+            y: -c / magnitude_max
         });
     }
+    return out_fn;
 }
 
 function updateEquation() {
@@ -427,12 +428,14 @@ function update() {
 
     // conv-ops
     updateConvLayout();
+    // reverse kernel in a non destructive way by making a copy
+    const reversed_kernel_fn = [...kernel_fn].reverse();
     updateXaxis(conv, kernel_fn.length, dilatation);
-    drawFunction(conv, kernel_fn, dilatation, kernel_color);
-    drawConvOps(ops, kernel_fn, dilatation);
+    drawFunction(conv, reversed_kernel_fn, dilatation, kernel_color);
+    drawConvOps(ops, reversed_kernel_fn, dilatation);
 
     // result
-    computeConv();
+    out_fn = computeConv(func_padded_fn, reversed_kernel_fn);
     updateOutputLayout();
     updateXaxis(out, out_fn.length, stride);
     drawFunction(out, out_fn, stride, out_color);
