@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8">
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script type="text/x-mathjax-config">
@@ -88,7 +89,8 @@
         border: 1px solid transparent;
         border-radius: 4px;
         text-decoration: none;
-        margin-inline: 4px;
+        margin-top: 4px;
+        margin-bottom : 4px;
 
         color: #4e5462;
         background-color: #fff;
@@ -136,7 +138,7 @@
 
    /* When you mouse over the navigation links, change their color */
    .sidenav a:hover {
-     color: #f1f1f1;
+     color: #111;
    }
 
    /* Position and style the close button (top right corner) */
@@ -163,6 +165,11 @@
    .nav-wrapper {
      padding-horizontal: 10px;
      margin: 10px;
+     width: 200px;
+   }
+
+   .grabbing {
+     cursor: move;
    }
 
 
@@ -247,10 +254,10 @@
      <div id="math"></div>
      <div id="canvas"></div>
      <p>
-       <input type="button" id="reset" value="&#171;">
-       <input type="button" id="prevstep" value="&#706;">
-       <input type="button" id="play" value="&#8227;">
-       <input type="button" id="nextstep" value="&#707;">
+       <div id="reset" class="btn btn-square">&#171;</div>
+       <div id="prevstep" class="btn btn-square">&#706;</div>
+       <div id="play" class="btn btn-square">&#8227;</div>
+       <div id="nextstep" class="btn btn-square">&#707;</div>
      </p>
    </div>
   </div>
@@ -346,7 +353,7 @@ function computeConv(f, g) {
         }
         out_fn.push({
             x: 0,
-            y: -c / magnitude_max
+            y: - Math.sqrt(c / magnitude_max / magnitude_max / 2) * magnitude_max,
         });
     }
     return out_fn;
@@ -372,6 +379,8 @@ function updateEquation() {
 dragY = d3.drag()
     .on("start", function(d) {
         d3.select(this).attr("stroke", "black");
+        d3.select(this).style("cursor", null);
+        d3.select("#canvas").node().classList.add("grabbing");;
     })
     .on("drag", function(d) {
         y = d3.event.y;
@@ -383,6 +392,8 @@ dragY = d3.drag()
     })
     .on("end", function(d) {
         d3.select(this).attr("stroke", null);
+        d3.select(this).style("cursor", "pointer");
+        d3.select("#canvas").node().classList.remove("grabbing");;
     })
 
 //// Draw X axis line
@@ -518,6 +529,7 @@ function drawFunction(root, data, dilatation, color) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
         .attr("r", 0)
+        .style("cursor", "pointer")
         .call(dragY)
         .on("dblclick", function(d) {
             d.y = d.y ? 0 : - magnitude_max;
