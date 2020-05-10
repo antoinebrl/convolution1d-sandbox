@@ -51,11 +51,12 @@
     }
 
     #math {
-      width: 500px;
+      width: 100%;
+      height: 90px;
       font-size: 1.2em;
     }
     .menu {
-      margin-top: 95px;
+      margin-top: 120px;
     }
 
     .rotate270 {
@@ -288,12 +289,14 @@
 const width = 575;
 const height = 625;
 
-const kernel_color = "#C72E38"
-const func_color = "#1d3557"
-const mult_color = "#d94a64"
-const add_color = "#679436"
-const out_color = "#8e576d"
-const duration = 350
+const bkg_color = "#f4f1de";
+const text_color = "#818181";
+const kernel_color = "#C72E38";
+const func_color = "#1d3557";
+const mult_color = "#d94a64";
+const add_color = "#679436";
+const out_color = "#8e576d";
+const duration = 350;
 
 
 const kernel_line_y = 80;
@@ -361,15 +364,42 @@ function computeConv(f, g) {
 
 function updateEquation() {
     const equation = document.getElementById("math");
-
+    // result
     latex_equation = "\\textcolor{" + out_color + "}{(f * g)}("+ step + ") "
     latex_equation += "= "
-    latex_equation += "\\textcolor{" + add_color + "}{\\sum_{k}^{K}}"
-    latex_equation += "\\textcolor{" + func_color + "}{f_{i+j}}"
-    latex_equation += "\\textcolor{" + mult_color + "}{\\mathbf{\\times}} "
-    latex_equation += "\\textcolor{" + kernel_color + "}{w_j}"
+    // sum
+    const p = Math.floor((kernel_fn.length - 1) / 2)
+    if (kernel_fn.length > 1) {
+        latex_equation += "\\textcolor{" + add_color + "}{"
+        latex_equation += "\\sum_{k=-p}^{K-p}"
+        latex_equation += "}"
+    }
 
-    equation.innerHTML = "<p>" + "\\[" + latex_equation + "\\]" + "</p>";
+    // kernel
+    latex_equation += "\\textcolor{" + kernel_color + "}{w_k}"
+    // mult
+    latex_equation += "\\textcolor{" + mult_color + "}{\\mathbf{\\times}} "
+
+    // signal
+    latex_equation += "\\textcolor{" + func_color + "}{"
+    latex_equation += "f_{"
+    latex_equation += " \\textcolor{" + text_color + "}{" + step + "} \\times \\textcolor{PaleVioletRed}{s}"
+    latex_equation += "- \\textcolor{" + add_color + "}{k}"
+    latex_equation += "*\\textcolor{darkorange}{d}"
+
+    const offset = Math.floor(kernel_fn.length / 2) * dilatation - padding
+    latex_equation += "+\\textcolor{CadetBlue}{o}"
+    latex_equation += "}}"
+
+    // put brackets around operators to reduce spacing
+    legend = "\\small "
+    legend += "\\textcolor{" + kernel_color + "}{K{=}" + kernel_fn.length +"}";
+    legend += ",\\; \\textcolor{" + add_color + "}{p{=} \\lfloor (K - 1)/2 \\rfloor {=} " + p + "}"
+    legend += ",\\; \\textcolor{darkorange}{d{=}" + dilatation + "}"
+    legend += ",\\; \\textcolor{PaleVioletRed}{s{=}" + stride + "}"
+    legend += ",\\; \\textcolor{CadetBlue}{o{=}\\lfloor K/2 \\rfloor {*} d {-} p {=}" + offset + "}"
+
+    equation.innerHTML = "<p>" + "\\[" + latex_equation + "\\]" + "</p><p>" + "\\[" + legend + "\\]" + "</p>";
     try {
       MathJax.typeset(["#math"]);
     } catch (error) {
@@ -631,11 +661,13 @@ function update() {
     updateEquation();
 
     // kernel
+    console.log("kernel")
     updateCenteredLayout(kernel, kernel_fn.length, kernel_line_y, dilatation);
     updateXaxis(kernel, kernel_fn.length, dilatation);
     drawFunction(kernel, kernel_fn, dilatation, kernel_color);
 
     // function
+    console.log("signal")
     updatePadLeft();
     updateXaxis(pad_left, padding, 1);
     drawPadding(pad_left, padding);
@@ -649,6 +681,7 @@ function update() {
     drawPadding(pad_right, padding);
 
     // conv-ops
+    console.log("conv")
     updateConvLayout();
     // reverse kernel in a non destructive way by making a copy
     const reversed_kernel_fn = [...kernel_fn].reverse();
@@ -657,10 +690,13 @@ function update() {
     drawConvOps(ops, reversed_kernel_fn, dilatation);
 
     // result
+        console.log("result")
     out_fn = computeConv(func_padded_fn, reversed_kernel_fn);
     updateOutputLayout();
     updateXaxis(out, out_fn.length, stride);
     drawFunction(out, out_fn, stride, out_color);
+    console.log("complited")
+
 }
 update();
 animate = true;
