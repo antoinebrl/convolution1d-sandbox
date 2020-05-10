@@ -437,8 +437,8 @@ function updatePadRight() {
 }
 
 function updateConvLayout() {
-    let x = (width - func_padded_fn.length * pts_spacing) / 2
-    x += pts_spacing * step * stride
+    let x = (width - func_padded_fn.length * pts_spacing) / 2;
+    x += pts_spacing * step * stride;
     x -= pts_spacing * (dilatation - 1) / 2;
     conv.transition()
         .duration(animate * duration)
@@ -446,9 +446,9 @@ function updateConvLayout() {
 }
 
 function updateOutputLayout() {
-    let x = (width - func_padded_fn.length * pts_spacing) / 2
-    x += pts_spacing * ((kernel_fn.length - 1) * dilatation + 1) / 2
-    x -= pts_spacing * stride / 2;
+    let x = (width - func_padded_fn.length * pts_spacing) / 2;
+    x += pts_spacing * ((Math.ceil(kernel_fn.length / 2) - 1) * dilatation);
+    x -= pts_spacing * (stride - 1) / 2 ;
     out.transition()
         .duration(animate * duration)
         .attr("transform", "translate(" + x + "," + out_line_y + ")");
@@ -476,9 +476,6 @@ function drawPadding(root, n) {
             return pts_spacing * (i + 0.5);
         })
         .attr("cy", 0);
-
-    new_circles
-;
 }
 
 function drawFunction(root, data, dilatation, color) {
@@ -603,7 +600,7 @@ function drawConvOps(root, data, dilatation) {
         .duration(animate* duration)
         .attr("d", function(d, i) {
             const x_pts = pts_spacing * (i + 0.5) * dilatation;
-            const x_middle = pts_spacing * data.length / 2 * dilatation;
+            const x_middle = pts_spacing * (Math.ceil(data.length / 2) - 0.5) * dilatation;
             const points = [
                 [x_pts, Math.max(d.y, -radius / 2) + 10],
                 [x_pts, magnitude_max + 10],
@@ -678,7 +675,7 @@ d3.select("#dilatation")
     .on("input", function() {
         dilatation = Math.min(Math.max(this.min, this.value), this.max);
         this.value = dilatation;
-        while (getConvRightPosition(step) > func_padded_fn.length) {
+        while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
             step -= 1;
         }
         update();
@@ -688,7 +685,7 @@ d3.select("#stride")
     .on("input", function() {
         stride = Math.min(Math.max(this.min, this.value), this.max);
         this.value = stride;
-        while (getConvRightPosition(step) > func_padded_fn.length) {
+        while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
             step -= 1;
         }
         update();
@@ -698,7 +695,7 @@ d3.select("#padding")
     .on("input", function() {
         padding = Math.min(Math.max(this.min, this.value), this.max);
         this.value = padding;
-        while (getConvRightPosition(step) > func_fn.length + 2 *padding) {
+        while (step > 0 && getConvRightPosition(step) > func_fn.length + 2 *padding) {
             step -= 1;
         }
         update();
@@ -724,7 +721,7 @@ d3.select("#new")
     .on("click", function() {
         if (kernel_fn.length < kernel_max_support) {
             kernel_fn.push({ y: 0 });
-            while (getConvRightPosition(step) > func_padded_fn.length) {
+            while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
                 step -= 1;
             }
             update();
