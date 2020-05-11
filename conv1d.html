@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=0.8">
+  <meta name="viewport" content="">
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script type="text/x-mathjax-config">
@@ -26,13 +26,24 @@
       font-family: monospace;
       font-size: 12px;
       color: #818181;
+      background-color: #eeeeee;
+      margin: auto;
+      height: 100%;
+      /* width: 30%; */
+    }
+
+    .center {
+      margin: auto;
+      width: min-content;
+      border-left: 1px solid lightgray;
+      border-right: 1px solid lightgray;
     }
 
     .row {
       display: flex;
     }
     .left {
-      width: 34px;
+      width: 42px;
     }
     .right {
       background-color: #f4f1de;
@@ -53,10 +64,12 @@
     #math {
       width: 100%;
       height: 90px;
-      font-size: 1.2em;
+      font-size: 1.25em;
     }
     .menu {
-      margin-top: 120px;
+      margin-left: 5px;
+      margin-right: 5px;
+      margin-top: 128px;
     }
 
     .rotate270 {
@@ -68,12 +81,13 @@
       height:105px;
       z-index: 2; /* Stay on top */
     }
+
     .btn{
         display: inline-block;
         padding: 6px 5px;
         margin-bottom: 0;
         font-family: monospace;
-        font-size: 12px;
+        font-size: 14px;
         text-align: center;
         font-weight: 400;
         line-height: 1.42857143;
@@ -177,16 +191,14 @@
   </style>
 </head>
 <body>
-  <div class="row">
+  <div class="row center">
    <div class="left">
      <div class="menu">
        <div class="option">
          <div id="kernel-menu" class="sidenav">
            <div class="nav-wrapper">
-             <div id="delete" class="btn btn-square">-</div>
-             <div id="new" class="btn btn-square">+</div>
              <a href="javascript:void(0)" class="closebtn" onclick="closeNav('kernel-menu')">&times;</a>
-             <p>dilatation:&nbsp;<input type="range" min="1" max="3" value="1" step="1" class="slider" id="dilatation"></p>
+             <p>support (K):<div id="delete" class="btn btn-square">-</div><div id="new" class="btn btn-square">+</div></p>
            </div>
          </div>
          <div class="btn rotate270" onclick="openNav('kernel-menu')">kernel</div>
@@ -195,7 +207,7 @@
          <div id="signal-menu" class="sidenav">
            <div class="nav-wrapper">
              <a href="javascript:void(0)" class="closebtn" onclick="closeNav('signal-menu')">&times;</a>
-             <p>padding:&nbsp;&nbsp;<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
+             <p>padding (p):&nbsp;&nbsp;<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
            </div>
          </div>
          <div class="btn rotate270" onclick="openNav('signal-menu')">signal</div>
@@ -204,7 +216,8 @@
          <div id="convolution-menu" class="sidenav">
            <div class="nav-wrapper">
              <a href="javascript:void(0)" class="closebtn" onclick="closeNav('convolution-menu')">&times;</a>
-             <p>stride:&nbsp;&nbsp;&nbsp;&nbsp;<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride"></p>
+             <p>dilatation (d):&nbsp;<input type="range" min="1" max="3" value="1" step="1" class="slider" id="dilatation"></p>
+             <p>stride (s):&nbsp;&nbsp;&nbsp;&nbsp;<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride"></p>
            </div>
          </div>
          <div class="btn rotate270" onclick="openNav('convolution-menu')">convolution</div>
@@ -251,7 +264,7 @@
        <input type="button" id="nextstep" value="&#707;">
      </p> -->
    </div>
-   <div class="column right">
+   <div class="right">
      <div id="math"></div>
      <div id="canvas"></div>
      <p>
@@ -284,10 +297,18 @@
   }
 
 
+const width = Math.max(575, Math.min(window.outerWidth-50, 900));
 
+const scaleW = window.outerWidth/(width+44);
+document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width,minimum-scale='+scaleW+',maximum-scale='+scaleW+',initial-scale='+scaleW);
 
-const width = 575;
-const height = 625;
+let height = window.outerHeight;
+if (scaleW < 1) {
+  height /= scaleW;
+} else {
+  height -= 86;
+}
+height -= 178;
 
 const bkg_color = "#f4f1de";
 const text_color = "#818181";
@@ -356,7 +377,7 @@ function computeConv(f, g) {
         }
         out_fn.push({
             x: 0,
-            y: - Math.sqrt(c / magnitude_max / magnitude_max / 2) * magnitude_max,
+            y: - Math.sign(c) * Math.sqrt(Math.abs(c) / magnitude_max / magnitude_max / 2) * magnitude_max,
         });
     }
     return out_fn;
@@ -368,23 +389,23 @@ function updateEquation() {
     latex_equation = "\\textcolor{" + out_color + "}{(f * g)}("+ step + ") "
     latex_equation += "= "
     // sum
-    const p = Math.floor((kernel_fn.length - 1) / 2)
+    const k = Math.floor((kernel_fn.length - 1) / 2)
     if (kernel_fn.length > 1) {
         latex_equation += "\\textcolor{" + add_color + "}{"
-        latex_equation += "\\sum_{k=-p}^{K-p}"
+        latex_equation += "\\sum_{i=-k}^{K-k}"
         latex_equation += "}"
     }
 
     // kernel
-    latex_equation += "\\textcolor{" + kernel_color + "}{w_k}"
+    latex_equation += "\\textcolor{" + kernel_color + "}{w_ \\textcolor{" + add_color + "}{i}}"
     // mult
-    latex_equation += "\\textcolor{" + mult_color + "}{\\mathbf{\\times}} "
+    latex_equation += "\\textcolor{" + mult_color + "}{\\; \\times \\;} "
 
     // signal
     latex_equation += "\\textcolor{" + func_color + "}{"
     latex_equation += "f_{"
     latex_equation += " \\textcolor{" + text_color + "}{" + step + "} \\times \\textcolor{PaleVioletRed}{s}"
-    latex_equation += "- \\textcolor{" + add_color + "}{k}"
+    latex_equation += "- \\textcolor{" + add_color + "}{i}"
     latex_equation += "*\\textcolor{darkorange}{d}"
 
     const offset = Math.floor(kernel_fn.length / 2) * dilatation - padding
@@ -394,9 +415,10 @@ function updateEquation() {
     // put brackets around operators to reduce spacing
     legend = "\\small "
     legend += "\\textcolor{" + kernel_color + "}{K{=}" + kernel_fn.length +"}";
-    legend += ",\\; \\textcolor{" + add_color + "}{p{=} \\lfloor (K - 1)/2 \\rfloor {=} " + p + "}"
+    legend += ",\\; p{=}" + padding
     legend += ",\\; \\textcolor{darkorange}{d{=}" + dilatation + "}"
     legend += ",\\; \\textcolor{PaleVioletRed}{s{=}" + stride + "}"
+    legend += ",\\; \\textcolor{" + add_color + "}{k{=} \\lfloor (K - 1)/2 \\rfloor {=} " + k + "}"
     legend += ",\\; \\textcolor{CadetBlue}{o{=}\\lfloor K/2 \\rfloor {*} d {-} p {=}" + offset + "}"
 
     equation.innerHTML = "<p>" + "\\[" + latex_equation + "\\]" + "</p><p>" + "\\[" + legend + "\\]" + "</p>";
@@ -508,7 +530,7 @@ function drawPadding(root, n) {
         .attr("cy", 0);
 }
 
-function drawFunction(root, data, dilatation, color) {
+function drawFunction(root, data, dilatation, color, is_interactive) {
     // data binding
     const vlines = root.selectAll("#vline").data(data);
     // remove elements no longer in data
@@ -556,12 +578,16 @@ function drawFunction(root, data, dilatation, color) {
             return pts_spacing * (i + 0.5) * dilatation;
         })
         .attr("r", 0)
-        .style("cursor", "pointer")
-        .call(dragY)
-        .on("dblclick", function(d) {
-            d.y = d.y ? 0 : - magnitude_max;
-            update()
-        });
+    if (is_interactive) {
+        new_circles
+            .style("cursor", "pointer")
+            .call(dragY)
+            .on("dblclick", function(d) {
+                d.y = d.y ? 0 : - magnitude_max;
+                update()
+            });
+    }
+
     // Operates on both new and old elements
     cercles
         .merge(new_circles)
@@ -658,47 +684,40 @@ function drawConvOps(root, data, dilatation) {
 
 function update() {
     func_padded_fn = padFunc(func_fn, padding);
-    updateEquation();
-
     // kernel
-    console.log("kernel")
     updateCenteredLayout(kernel, kernel_fn.length, kernel_line_y, dilatation);
     updateXaxis(kernel, kernel_fn.length, dilatation);
-    drawFunction(kernel, kernel_fn, dilatation, kernel_color);
+    drawFunction(kernel, kernel_fn, dilatation, kernel_color, true);
 
     // function
-    console.log("signal")
     updatePadLeft();
     updateXaxis(pad_left, padding, 1);
     drawPadding(pad_left, padding);
 
     updateCenteredLayout(func, func_fn.length, func_line_y, 1);
     updateXaxis(func, func_fn.length, 1);
-    drawFunction(func, func_fn, 1, func_color);
+    drawFunction(func, func_fn, 1, func_color, true);
 
     updatePadRight();
     updateXaxis(pad_right, padding, 1);
     drawPadding(pad_right, padding);
 
     // conv-ops
-    console.log("conv")
     updateConvLayout();
     // reverse kernel in a non destructive way by making a copy
     const reversed_kernel_fn = [...kernel_fn].reverse();
     updateXaxis(conv, kernel_fn.length, dilatation);
-    drawFunction(conv, reversed_kernel_fn, dilatation, kernel_color);
+    drawFunction(conv, reversed_kernel_fn, dilatation, kernel_color, true);
     drawConvOps(ops, reversed_kernel_fn, dilatation);
 
     // result
-        console.log("result")
     out_fn = computeConv(func_padded_fn, reversed_kernel_fn);
     updateOutputLayout();
     updateXaxis(out, out_fn.length, stride);
-    drawFunction(out, out_fn, stride, out_color);
-    console.log("complited")
-
+    drawFunction(out, out_fn, stride, out_color, false);
 }
 update();
+updateEquation();
 animate = true;
 
 
@@ -715,6 +734,7 @@ d3.select("#dilatation")
             step -= 1;
         }
         update();
+        updateEquation();
     })
 
 d3.select("#stride")
@@ -725,6 +745,7 @@ d3.select("#stride")
             step -= 1;
         }
         update();
+        updateEquation();
     });
 
 d3.select("#padding")
@@ -735,6 +756,7 @@ d3.select("#padding")
             step -= 1;
         }
         update();
+        updateEquation();
     });
 
 
@@ -743,6 +765,7 @@ d3.select("#prevstep")
         if (step > 0) {
             step -= 1;
             update();
+            updateEquation();
         }
     });
 d3.select("#nextstep")
@@ -750,6 +773,7 @@ d3.select("#nextstep")
         if (getConvRightPosition(step) + stride <= func_padded_fn.length) {
             step += 1;
             update();
+            updateEquation();
         }
     });
 
@@ -761,6 +785,7 @@ d3.select("#new")
                 step -= 1;
             }
             update();
+            updateEquation();
         }
     });
 d3.select("#delete")
@@ -777,6 +802,7 @@ d3.select("#play")
             if (getConvRightPosition(step) + stride <= func_padded_fn.length) {
                 step += 1;
                 update();
+                updateEquation();
                 d3.active(this).transition().delay(1000).on("start", repeat);
             }
         })
@@ -786,6 +812,7 @@ d3.select("#reset")
         d3.selectAll("*").interrupt();
         step = 0;
         update();
+        updateEquation();
     });
 
   </script>
