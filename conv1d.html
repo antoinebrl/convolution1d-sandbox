@@ -26,36 +26,54 @@
       font-family: monospace;
       font-size: 12px;
       color: #818181;
-      background-color: #eeeeee;
+      background-color: #f4f1de;
+      /* background-color: #eeeeee; */
       margin: auto;
       height: 100%;
+      text-align: center;
       /* width: 30%; */
     }
 
-    .center {
-      margin: auto;
-      width: min-content;
-      border-left: 1px solid lightgray;
-      border-right: 1px solid lightgray;
+    h1, h2{
+        font-weight: 1.2;
+        color: #505050;
+    }
+    h2 {
+      text-align: left;
+    }
+    hr {
+      color: white;
+      border-width: 1px;
     }
 
-    .row {
+    /* .center {
+      margin: auto;
+      width: min-content;
+      border-top: 1px solid lightgray;
+      border-right: 1px solid lightgray;
+    } */
+
+    /* .row {
       display: flex;
     }
     .left {
       width: 42px;
-    }
-    .right {
+      border-right: 1px solid lightgray;
+
+    } */
+    /* .right {
       background-color: #f4f1de;
-    }
+    } */
 
     .btn-square {
       height: 1.5em !important;
       width: 1.5em  !important;
     }
 
-    input[type=rande]{
-      width: 80px;
+    input[type=range]{
+      vertical-align: middle;
+      line-height: 1.6;
+      width: 120;
     }
     input[type=number]{
       width: 32px;
@@ -67,9 +85,19 @@
       font-size: 1.25em;
     }
     .menu {
-      margin-left: 5px;
-      margin-right: 5px;
-      margin-top: 128px;
+      /* margin-left: 5px; */
+      /* margin-right: 5px; */
+      padding-top: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid lightgray;
+    }
+    .menu h1, .menu .option {
+      display: inline;
+    }
+    .option {
+        position:fixed;
+        left: 8px;
+        top: 2px;
     }
 
     .rotate270 {
@@ -78,7 +106,7 @@
         text-align: right;
     }
     .menu .btn {
-      height:105px;
+      /* height:105px; */
       z-index: 2; /* Stay on top */
     }
 
@@ -86,10 +114,9 @@
         display: inline-block;
         padding: 6px 5px;
         margin-bottom: 0;
-        font-family: monospace;
         font-size: 14px;
         text-align: center;
-        font-weight: 400;
+        /* font-weight: 400; */
         line-height: 1.42857143;
         white-space: nowrap;
         vertical-align: middle;
@@ -106,6 +133,7 @@
         text-decoration: none;
         margin-top: 4px;
         margin-bottom : 4px;
+        height: 2em;
 
         color: #4e5462;
         background-color: #fff;
@@ -136,12 +164,15 @@
        height: auto; /* 100% Full-height */
        width: 0; /* 0 width - change this with JavaScript */
        position: fixed; /* Stay in place */
-       z-index: 1; /* Stay on top */
+       z-index: 10; /* Stay on top */
        background-color: #eee; /* Black*/
        overflow-x: hidden; /* Disable horizontal scroll */
        transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
-       margin-left: 28px;
-       margin-top: 4px;
+       margin-left: 8px;
+       margin-top: -6px;
+       box-shadow: 0px 0px 0px 1px lightgray inset;
+       /* border: 1px solid lightgray; */
+       box-sizing: border-box;
    }
 
    /* The navigation menu links */
@@ -180,112 +211,63 @@
    .nav-wrapper {
      padding-horizontal: 10px;
      margin: 10px;
-     width: 200px;
+     width: 270px;
    }
 
    .grabbing {
      cursor: move;
    }
 
+   #player .btn {
+     width: 80px;
+     height: 20px;
+   }
+
 
   </style>
 </head>
 <body>
-  <div class="row center">
-   <div class="left">
-     <div class="menu">
-       <div class="option">
-         <div id="kernel-menu" class="sidenav">
-           <div class="nav-wrapper">
-             <a href="javascript:void(0)" class="closebtn" onclick="closeNav('kernel-menu')">&times;</a>
-             <p>support (K):<div id="delete" class="btn btn-square">-</div><div id="new" class="btn btn-square">+</div></p>
-           </div>
-         </div>
-         <div class="btn rotate270" onclick="openNav('kernel-menu')">kernel</div>
-       </div>
-       <div class="option">
-         <div id="signal-menu" class="sidenav">
-           <div class="nav-wrapper">
-             <a href="javascript:void(0)" class="closebtn" onclick="closeNav('signal-menu')">&times;</a>
-             <p>padding (p):&nbsp;&nbsp;<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
-           </div>
-         </div>
-         <div class="btn rotate270" onclick="openNav('signal-menu')">signal</div>
-       </div>
-       <div class="option">
-         <div id="convolution-menu" class="sidenav">
-           <div class="nav-wrapper">
-             <a href="javascript:void(0)" class="closebtn" onclick="closeNav('convolution-menu')">&times;</a>
-             <p>dilatation (d):&nbsp;<input type="range" min="1" max="3" value="1" step="1" class="slider" id="dilatation"></p>
-             <p>stride (s):&nbsp;&nbsp;&nbsp;&nbsp;<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride"></p>
-           </div>
-         </div>
-         <div class="btn rotate270" onclick="openNav('convolution-menu')">convolution</div>
-       </div>
-       <div class="option">
-         <div class="btn rotate270" id="result-btn" onclick="openNav('result-menu')">result</div>
-       </div>
-     </div>
+  <div class="menu ">
+    <div class="option btn" onclick="openNav('menu')">options</div>
+    <div id="menu" class="sidenav">
+      <div class="nav-wrapper">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav('menu')">&times;</a>
+        <h2>General:</h2>
+          <p>sphere radius:&nbsp;<input id="radius" type="number" min="6" max="20" value="25" step="2"></p>
+        <hr>
+        <h2>kernel:</h2>
+          <p>support (K):<div id="delete-kernel-element" class="btn btn-square">-</div><div id="add-kernel-element" class="btn btn-square">+</div></p>
+        <hr>
+        <h2>signal:</h2>
+          <p>support:<div id="delete-signal-element" class="btn btn-square">-</div><div id="add-signal-element" class="btn btn-square">+</div></p>
+          <p>padding (p):<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
+        <hr>
+        <h2>convolution:</h2>
+          <p>dilatation (d):<input type="range" min="1" max="3" value="1" step="1" class="slider" id="dilatation"></p>
+          <p>stride (s):<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride"></p>
 
-     <!-- Use any element to open the sidenav -->
-     <!-- <svg width="200px" height=200px>
-       <g transform="translate(0, 0)">
-         <rect width="32px" height="32px" rx="4px" fill="steelblue" ></rect>
-         <path d="M9 8 L9 24 L24 16 Z" fill=white></path>
-       </g>
-       <g transform="translate(50, 0)">
-         <rect width="32px" height="32px" rx="4px" fill="steelblue" ></rect>
-         <path d="M9 8 L9 24 L24 16 Z" fill=white></path>
-         <line x1="23" y1="8" x2="23" y2="24" stroke="white" stroke-width="4"/>
-       </g>
-       <g transform="translate(32, 50) scale(-1,1)">
-         <rect width="32px" height="32px" rx="4px" fill="steelblue" ></rect>
-         <path d="M9 8 L9 24 L24 16 Z" fill=white></path>
-         <line x1="23" y1="8" x2="23" y2="24" stroke="white" stroke-width="4"/>
-       </g>
-     </svg> -->
-     <!-- <p>
-       <input class="btn-square" type="button" id="new" value="+">
-       <input class="btn-square" type="button" id="delete" value="-">
-     </p>
-     <p>dilation:
-       <input type="number" id="dilatation" value=1 min="1" max="3">
-     </p>
-     <p>padding:
-       <input type="number" id="padding" value=0 min="0" max="4">
-     </p>
-     <p>stride:
-       <input type="number" id="stride" value=1 min="1" max="3">
-     </p>
-     <p>
-       <input type="button" id="reset" value="&#171;">
-       <input type="button" id="prevstep" value="&#706;">
-       <input type="button" id="play" value="&#8227;">
-       <input type="button" id="nextstep" value="&#707;">
-     </p> -->
-   </div>
-   <div class="right">
-     <div id="math"></div>
-     <div id="canvas"></div>
-     <p>
-       <div id="reset" class="btn btn-square">&#171;</div>
-       <div id="prevstep" class="btn btn-square">&#706;</div>
-       <div id="play" class="btn btn-square">&#8227;</div>
-       <div id="nextstep" class="btn btn-square">&#707;</div>
-     </p>
-   </div>
+      </div>
+    </div>
+    <h1>Convolution Sandbox</h1>
   </div>
 
-
+   <div id="math"></div>
+   <div id="canvas"></div>
+   <div id="player">
+     <div id="reset" class="btn">reset</div>
+     <div id="prevstep" class="btn">previous</div>
+     <div id="play" class="btn">play</div>
+     <div id="nextstep" class="btn">next</div>
+     <div id="end" class="btn">last</div>
+   </div>
 
   <script>
 
   /* Set the width of the side navigation to 250px */
   function openNav(id) {
     let element = document.getElementById(id)
-    console.log(element.style)
     if (element.style.width == "" || element.style.width == "0px") {
-      element.style.width = "250px";
+      element.style.width = "300px";
     } else {
       element.style.width = "0px";
     }
@@ -296,10 +278,13 @@
     document.getElementById(id).style.width = "0";
   }
 
+if (window.outerWidth > 900 + 250*2) {
+  openNav("menu")
+}
 
-const width = Math.max(575, Math.min(window.outerWidth-50, 900));
+const width = Math.max(575, Math.min(window.outerWidth, 900));
 
-const scaleW = window.outerWidth/(width+44);
+const scaleW = window.outerWidth/width;
 document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width,minimum-scale='+scaleW+',maximum-scale='+scaleW+',initial-scale='+scaleW);
 
 let height = window.outerHeight;
@@ -308,7 +293,7 @@ if (scaleW < 1) {
 } else {
   height -= 86;
 }
-height -= 178;
+height -= 218;
 
 const bkg_color = "#f4f1de";
 const text_color = "#818181";
@@ -328,7 +313,7 @@ const out_line_y = 490;
 const magnitude_max = 50;
 const pts_spacing = 25;
 const kernel_max_support = 7;
-const radius = 8;
+let radius = 10;
 
 let dilatation = 1;
 let stride = 1;
@@ -355,6 +340,22 @@ const pad_right = svg.append("g").attr("id", "pad_right");
 const func = svg.append("g").attr("id", "func");
 const out = svg.append("g").attr("id", "out");
 
+function printLabel(label, line_y) {
+  svg.append("text")
+      .attr("stroke-width", "2")
+      .attr("fill", "#4e5462")
+      .attr("transform", "rotate(-90) translate(-" + line_y + ", 20)")
+      .attr("text-anchor", "middle")
+      .attr("font-family", "monospace")
+      .attr("dominant-baseline", "middle")
+      .text(label);
+}
+printLabel("kernel", kernel_line_y);
+printLabel("signal", func_line_y);
+printLabel("convolution", conv_line_y);
+printLabel("result", out_line_y);
+
+
 
 function padFunc(fn, pad) {
   let padded = [];
@@ -372,13 +373,16 @@ function computeConv(f, g) {
     out_fn = [];
     for (let s = 0; s <= step; s++) {
         let c = 0;
-        for (let i = 0; i < g.length; i++) {
-            c += g[i].y * f[s * stride + i * dilatation].y
+        try {
+            for (let i = 0; i < g.length; i++) {
+                c += g[i].y * f[s * stride + i * dilatation].y
+            }
+            out_fn.push({
+                x: 0,
+                y: - Math.sign(c) * Math.sqrt(Math.abs(c) / magnitude_max / magnitude_max / 2) * magnitude_max,
+            });
+        } catch  (error) {
         }
-        out_fn.push({
-            x: 0,
-            y: - Math.sign(c) * Math.sqrt(Math.abs(c) / magnitude_max / magnitude_max / 2) * magnitude_max,
-        });
     }
     return out_fn;
 }
@@ -726,6 +730,12 @@ function getConvRightPosition(step) {
 }
 
 //// User input
+d3.select("#radius").on("input", function() {
+    radius = Math.max(6, Math.min(this.value, 20));
+    this.value = radius;
+    update();
+});
+
 d3.select("#dilatation")
     .on("input", function() {
         dilatation = Math.min(Math.max(this.min, this.value), this.max);
@@ -759,7 +769,6 @@ d3.select("#padding")
         updateEquation();
     });
 
-
 d3.select("#prevstep")
     .on("click", function() {
         if (step > 0) {
@@ -777,7 +786,7 @@ d3.select("#nextstep")
         }
     });
 
-d3.select("#new")
+d3.select("#add-kernel-element")
     .on("click", function() {
         if (kernel_fn.length < kernel_max_support) {
             kernel_fn.push({ y: 0 });
@@ -788,12 +797,28 @@ d3.select("#new")
             updateEquation();
         }
     });
-d3.select("#delete")
+d3.select("#delete-kernel-element")
     .on("click", function() {
         if (kernel_fn.length > 1) {
-            kernel_fn.pop({ y: 0 });
+            kernel_fn.pop();
             update();
         }
+    });
+
+d3.select("#add-signal-element")
+    .on("click", function() {
+          func_fn.push({ y: 0 });
+          update();
+    });
+d3.select("#delete-signal-element")
+    .on("click", function() {
+          func_fn.pop({ y: 0 });
+          func_padded_fn = padFunc(func_fn, padding);
+          while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+              step -= 1;
+          }
+          update();
+          updateEquation();
     });
 d3.select("#play")
     .on("click", function() {
@@ -814,7 +839,15 @@ d3.select("#reset")
         update();
         updateEquation();
     });
-
+d3.select("#end")
+    .on("click", function() {
+        d3.selectAll("*").interrupt();
+        while (getConvRightPosition(step) + stride <= func_padded_fn.length) {
+            step += 1;
+        }
+        update();
+        updateEquation();
+    });
   </script>
 </body>
 </html>
