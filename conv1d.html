@@ -40,7 +40,7 @@
     }
     h2 {
       text-align: left;
-      margin-bottom: 0.5em;  
+      margin-bottom: 0.5em;
     }
     hr {
       color: white;
@@ -234,6 +234,11 @@
         <hr>
         <h2>signal:</h2>
           <div>support:<div id="delete-signal-element" class="btn btn-square">-</div><div id="add-signal-element" class="btn btn-square">+</div></div>
+          <div>type:
+            <input type="radio" value="sine" name="signal">sine wage
+            <input type="radio" value="square" name="signal">square
+            <input type="radio" value="ramp" name="signal">ramp
+          </div>
           <p>padding (p):&nbsp;<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
         <hr>
         <h2>convolution:</h2>
@@ -320,7 +325,7 @@ const svg = d3.select("#canvas")
     .attr("height", height);
 
 let kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
-const func_fn = d3.range(15).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+let func_fn = d3.range(15).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 let func_padded_fn = [];
 let out_fn = [];
 
@@ -810,7 +815,11 @@ d3.selectAll("input[name='kernel']").on("change", function(){
     } else if (this.value == "derivative") {
         kernel_fn = [{y:-magnitude_max}, {y:magnitude_max}];
     }
-    update()
+    while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+        step -= 1;
+    }
+    update();
+    updateEquation();
 });
 
 d3.select("#add-signal-element")
@@ -828,6 +837,35 @@ d3.select("#delete-signal-element")
           update();
           updateEquation();
     });
+d3.selectAll("input[name='signal']").on("change", function(){
+    if (this.value == "sine") {
+        new_fn = []
+        for (let i = 0; i < func_fn.length; i++) {
+            new_fn.push({y: Math.cos(i/1.3) * magnitude_max})
+        }
+        func_fn = new_fn;
+    } else if (this.value == "square") {
+        new_fn = []
+        for (let i = 0; i < func_fn.length; i++) {
+            console.log()
+            new_fn.push({y: - (Math.floor(i / 5) + 1)% 2 * magnitude_max})
+        }
+        func_fn = new_fn;
+    } else if (this.value == "ramp") {
+        new_fn = []
+        for (let i = 0; i < func_fn.length; i++) {
+            new_fn.push({y: - ((i / 5) % 1 * 5/4 - 0.5) * 2 * magnitude_max})
+        }
+        func_fn = new_fn;
+    }
+    while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+        step -= 1;
+    }
+    update();
+    updateEquation();
+});
+
+
 d3.select("#play")
     .on("click", function() {
         d3.selectAll("*").interrupt();
