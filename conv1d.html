@@ -40,39 +40,25 @@
     }
     h2 {
       text-align: left;
+      margin-bottom: 0.5em;  
     }
     hr {
       color: white;
       border-width: 1px;
     }
 
-    /* .center {
-      margin: auto;
-      width: min-content;
-      border-top: 1px solid lightgray;
-      border-right: 1px solid lightgray;
-    } */
-
-    /* .row {
-      display: flex;
-    }
-    .left {
-      width: 42px;
-      border-right: 1px solid lightgray;
-
-    } */
-    /* .right {
-      background-color: #f4f1de;
-    } */
 
     .btn-square {
       height: 1.5em !important;
       width: 1.5em  !important;
     }
-
+    input[type=radio]{
+      vertical-align: text-bottom;
+      line-height: 0.4em;
+    }
     input[type=range]{
       vertical-align: middle;
-      line-height: 1.6;
+      line-height: 1.6em;
       width: 120;
     }
     input[type=number]{
@@ -190,7 +176,7 @@
    /* Position and style the close button (top right corner) */
    .sidenav .closebtn {
        position: absolute;
-       top: 0;
+       top: 8px;
        right: 8px;
        font-size: 2em;
        margin-left: 20px;
@@ -209,9 +195,8 @@
    }
 
    .nav-wrapper {
-     padding-horizontal: 10px;
      margin: 10px;
-     width: 270px;
+     width: 280px;
    }
 
    .grabbing {
@@ -227,7 +212,8 @@
   </style>
 </head>
 <body>
-  <div class="menu ">
+  <div class="menu">
+    <h1>Convolution Sandbox</h1>
     <div class="option btn" onclick="openNav('menu')">options</div>
     <div id="menu" class="sidenav">
       <div class="nav-wrapper">
@@ -236,19 +222,25 @@
           <p>sphere radius:&nbsp;<input id="radius" type="number" min="6" max="20" value="25" step="2"></p>
         <hr>
         <h2>kernel:</h2>
-          <p>support (K):<div id="delete-kernel-element" class="btn btn-square">-</div><div id="add-kernel-element" class="btn btn-square">+</div></p>
+          <div>support (K):&nbsp;<div id="delete-kernel-element" class="btn btn-square">-</div><div id="add-kernel-element" class="btn btn-square">+</div></div>
+          <div>type:
+            <input type="radio" value="constant" name="kernel">constant
+            <input type="radio" value="step" name="kernel">step
+            <input type="radio" value="square" name="kernel">square<br>
+            <input type="radio" value="triangle" name="kernel">triangle
+            <input type="radio" value="gaussian" name="kernel">gaussian
+            <input type="radio" value="derivative" name="kernel">derivative
+          </div>
         <hr>
         <h2>signal:</h2>
-          <p>support:<div id="delete-signal-element" class="btn btn-square">-</div><div id="add-signal-element" class="btn btn-square">+</div></p>
-          <p>padding (p):<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
+          <div>support:<div id="delete-signal-element" class="btn btn-square">-</div><div id="add-signal-element" class="btn btn-square">+</div></div>
+          <p>padding (p):&nbsp;<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding"></p>
         <hr>
         <h2>convolution:</h2>
           <p>dilatation (d):<input type="range" min="1" max="3" value="1" step="1" class="slider" id="dilatation"></p>
-          <p>stride (s):<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride"></p>
-
+          <p>stride (s):&nbsp;<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride"></p>
       </div>
     </div>
-    <h1>Convolution Sandbox</h1>
   </div>
 
    <div id="math"></div>
@@ -327,7 +319,7 @@ const svg = d3.select("#canvas")
     .attr("width", width)
     .attr("height", height);
 
-const kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+let kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 const func_fn = d3.range(15).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
 let func_padded_fn = [];
 let out_fn = [];
@@ -378,8 +370,7 @@ function computeConv(f, g) {
                 c += g[i].y * f[s * stride + i * dilatation].y
             }
             out_fn.push({
-                x: 0,
-                y: - Math.sign(c) * Math.sqrt(Math.abs(c) / magnitude_max / magnitude_max / 2) * magnitude_max,
+                y: - Math.sign(c) * Math.sqrt(Math.abs(c) / magnitude_max / magnitude_max) * magnitude_max,
             });
         } catch  (error) {
         }
@@ -804,6 +795,23 @@ d3.select("#delete-kernel-element")
             update();
         }
     });
+
+d3.selectAll("input[name='kernel']").on("change", function(){
+    if (this.value == "constant") {
+        kernel_fn = [{y:-magnitude_max}, {y:-magnitude_max}, {y:-magnitude_max}];
+    } else if (this.value == "step") {
+        kernel_fn = [{y:0}, {y:0}, {y:-magnitude_max}, {y:-magnitude_max}, {y:-magnitude_max}];
+    } else if (this.value == "square") {
+        kernel_fn = [{y:0}, {y:-magnitude_max}, {y:-magnitude_max}, {y:-magnitude_max}, {y:0}];
+    } else if (this.value == "triangle") {
+        kernel_fn = [{y:-magnitude_max / 3}, {y:-magnitude_max * 2 / 3}, {y:-magnitude_max}, {y:-magnitude_max * 2 / 3}, {y:-magnitude_max / 3}];
+    } else if (this.value == "gaussian") {
+        kernel_fn = [{y:-magnitude_max * 4 / 19}, {y:-magnitude_max * 10 / 18 }, {y:-magnitude_max * 16 / 19}, {y:-magnitude_max}, {y:-magnitude_max * 16 / 19}, {y:-magnitude_max * 10 / 19}, {y:-magnitude_max * 4 / 19}];
+    } else if (this.value == "derivative") {
+        kernel_fn = [{y:-magnitude_max}, {y:magnitude_max}];
+    }
+    update()
+});
 
 d3.select("#add-signal-element")
     .on("click", function() {
