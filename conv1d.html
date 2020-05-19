@@ -367,19 +367,22 @@ function padFunc(fn, pad) {
 
 function computeConv(f, g) {
     out_fn = [];
-    for (let s = 0; s <= step; s++) {
+    let s = 0
+    while (getConvRightPosition(s) <= func_padded_fn.length) {
         let c = 0;
+
         try {
             for (let i = 0; i < g.length; i++) {
                 c += g[i].y * f[s * stride + i * dilatation].y
             }
-            out_fn.push({
-                y: - Math.sign(c) * Math.sqrt(Math.abs(c) / magnitude_max / magnitude_max) * magnitude_max,
-            });
+            out_fn.push({y: - c / magnitude_max});
         } catch  (error) {
         }
+        s += 1;
     }
-    return out_fn;
+    let max_value = out_fn.reduce((a, b) => {return {y: Math.max(a.y, Math.abs(b.y))}}, {y: 0})
+    out_fn = out_fn.map(d => ({y: d.y / max_value.y * magnitude_max}))
+    return out_fn.slice(0, step+1);
 }
 
 function updateEquation() {
