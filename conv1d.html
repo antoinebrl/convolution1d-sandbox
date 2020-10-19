@@ -31,6 +31,7 @@
       height: 100%;
       text-align: center;
       /* width: 30%; */
+      overscroll-behavior-y: none;
     }
 
     h1, h2{
@@ -876,7 +877,7 @@ d3.select("#play")
                 step += 1;
                 update();
                 updateEquation();
-                d3.active(this).transition().delay(1000).on("start", repeat);
+                d3.active(this).transition().delay(600).on("start", repeat);
             }
         })
     });
